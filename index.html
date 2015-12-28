@@ -1,0 +1,142 @@
+<html lang="en">
+
+<head>
+</head>
+
+<body>
+    <canvas id="canvas1" width="500" height="500"></canvas>
+    <script type="text/javascript" src="/js/utility.js"></script>
+    <script type="text/javascript" src="/js/geometry.js"></script>
+    <script type="text/javascript" src="/js/pointIn.js"></script>
+    <script>
+        //http://jsfiddle.net/9gfsmgL9/32/
+        var can = document.getElementById('canvas1');
+        var ctx = can.getContext('2d');
+
+        var cx = can.width * 0.5;
+        var cy = can.height * 0.5;
+
+
+
+        function drawLineAL(x, y, angle, length) {
+            ctx.moveTo(x, y);
+            var otherPoint = getPointAL(x, y, angle, length);
+            ctx.lineTo(otherPoint.x, otherPoint.y);
+            ctx.stroke();
+        };
+
+
+
+        function drawText(x, y, text) {
+            ctx.save();
+            ctx.font = "16px Arial";
+            ctx.lineWidth = 4;
+            ctx.fillStyle = 'rgba(0,0,0,1)';
+            ctx.strokeStyle = 'rgba(255,255,255,1)';
+            ctx.strokeText(text, x, y);
+            ctx.fillText(text, x, y);
+            ctx.restore();
+        };
+
+        function drawPointText(px, py, vx, vy) {
+            drawText(px, py, "[" + vx + "," + vy + "]");
+        };
+
+
+        function drawCircle(x, y, radius, color) {
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, 2 * Math.PI);
+            ctx.fill();
+        };
+
+
+
+        var points = [];
+        for (var i = 0; i < 1500; i++) {
+            points.push(point(Math.random() * can.width, 40 + Math.random() * (can.height - 40)));
+        }
+
+
+        var fps = 30;
+        var now;
+        var then = Date.now();
+        var interval = 1000 / fps;
+        var delta;
+
+
+        var csDir = 0;
+        var csRad = 150;
+
+
+        var moveSeg = {
+            angle: 0,
+            speed: 0.05,
+            centerX: 200,
+            centerY: 200,
+            radius: 50
+        };
+
+        var circleSegment = new CircleSegment(200, 200, 150, toRadians(60), 0);
+
+        //console.log("fun: " + JSON.stringify(circleSegment));
+
+        function frame() {
+            ctx.save();
+            ctx.clearRect(0, 0, can.width, can.height);
+
+            csDir += 0.01;
+            if (csDir > Math.PI * 2) {
+                csDir -= Math.PI * 2;
+            }
+            circleSegment.direction = csDir;
+            csRad += 1;
+            if (csRad > 300) {
+                csRad = 25;
+            }
+            circleSegment.radius = csRad;
+            circleSegment.x = moveSeg.centerX + Math.cos(moveSeg.angle) * moveSeg.radius;
+            circleSegment.y = moveSeg.centerY + Math.sin(moveSeg.angle) * moveSeg.radius;
+            moveSeg.angle += moveSeg.speed;
+
+            circleSegment.draw(ctx);
+
+            drawDots();
+            ctx.restore();
+
+        };
+
+        function drawDots() {
+            for (var i = 0; i < points.length; i++) {
+                points[i].x += .25;
+                if (points[i].x > can.width) {
+                    points[i].x = 0
+                }
+                var color = 'blue';
+                if (circleSegment.contains(points[i].x, points[i].y)) {
+                    color = 'red';
+                }
+
+                drawCircle(points[i].x, points[i].y, 3, color);
+            }
+        };
+
+        function draw() {
+
+            requestAnimationFrame(draw);
+
+            now = Date.now();
+            delta = now - then;
+
+            if (delta > interval) {
+                then = now - (delta % interval);
+
+                frame();
+            }
+        };
+
+        draw();
+    </script>
+</body>
+
+</html>
